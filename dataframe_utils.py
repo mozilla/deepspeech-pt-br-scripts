@@ -7,7 +7,7 @@ def limit_repeated_samples(df, limit):
     counter = Counter(df['transcript'].values)
 
     # No sentence repeats more than `limit` times, short-circuit
-    if counter.most_common(1)[0][1] <= 500:
+    if counter.most_common(1)[0][1] <= limit:
         return df
 
     # Collect samples with transcripts that repeat <= `limit` times in the dataset.
@@ -26,7 +26,7 @@ def limit_repeated_samples(df, limit):
     new_df = pandas.concat([data_le_limit, *sentence_samples])
 
     new_counter = Counter(new_df['transcript'].values)
-    assert new_counter.most_common(1)[0][1] <= 500
+    assert new_counter.most_common(1)[0][1] <= limit
 
     return new_df
 
