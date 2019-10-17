@@ -1,5 +1,8 @@
+import os
 import pandas
 import subprocess
+import sys
+import wave
 
 from collections import Counter
 
@@ -110,3 +113,17 @@ def fix_header(wav_filename):
 def remove_files_non_alphabetic(df, alphabet):
     alphabetic = df['transcript'].apply(lambda x: set(x) <= alphabet)
     return df[alphabetic], df[~alphabetic]
+
+
+# Find corrupted files (header duration does not match file size). Example:
+#
+# invalid = df['wav_filename'].apply(compare_header_and_size)
+# print('The following files are corrupted:')
+# print(df[invalid].values)
+#
+def compare_header_and_size(wav_filename):
+    with wave.open(wav_filename, 'r') as fin:
+        header_fsize = (fin.getnframes() * fin.getnchannels() * fin.getsampwidth()) + 44
+    file_fsize = os.path.getsize(wav_filename)
+    return header_fsize != file_fsize
+
