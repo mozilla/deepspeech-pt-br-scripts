@@ -81,7 +81,7 @@ def transcode_files(df, idx_to_transcode):
     subprocess.check_call(shlex.split('''cat /tmp/to_transcode.txt | xargs -n1 -P32 bash -c 'sox "$0" -t wav -r 16000 -e signed -b 16 -c 1 --endian little --compression 0.0 --no-dither "${0/.wav/_transcoded.wav}"')'''), shell=True)
     df.loc[idx_to_transcode, 'wav_filename'] = df.loc[idx_to_transcode, 'wav_filename'].replace('.wav', '_transcoded.wav')
 
-    
+
 # In case of the following TensorFlow error, and you're ABSOLUTELY sure all
 # files are PCM Mono 16000 Hz, 16-bit per sample:
 #
@@ -101,7 +101,6 @@ def fix_header(wav_filename):
              fio.seek(0, 0)
              fio.write(header)
 
-                
 
 # Remove files that have transcripts with characters outside of the alphabet
 #
