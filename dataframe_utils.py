@@ -6,6 +6,13 @@ import wave
 
 from collections import Counter
 
+
+# Create (or override) a 'wav_filesize' column in the DataFrame with the size of
+# each sample in the dataset.
+def compute_filesize(df):
+    df['wav_filesize'] = df['wav_filename'].apply(os.path.getsize)
+
+
 # For a dataset where some transcripts repeat more than `limit` times, create a
 # new dataset where a sentence only repeats at most `limit` times.
 def limit_repeated_samples(df, limit):
@@ -126,4 +133,37 @@ def compare_header_and_size(wav_filename):
         header_fsize = (fin.getnframes() * fin.getnchannels() * fin.getsampwidth()) + 44
     file_fsize = os.path.getsize(wav_filename)
     return header_fsize != file_fsize
+
+
+# Remove files that are too short for their transcript
+def remove_not_enough_windows(df, sample_rate=16000, win_step_ms=20, utf8=False):
+    # Compute number of windows in each file
+    num_samples = (df['wav_filesize'] - 44) // 2
+    samples_per_window = int(sample_rate * (win_step_ms / 1000.))
+    num_windows = num_samples // samples_per_window
+
+    # Compute transcription length
+    if utf8:
+        str_len = df['transcript'].str.encode('utf8').str.len()
+    else:
+        str_len = df['transcript'].str.len()
+
+    enough_windows = num_windows >= str_len
+    return df[enough_windows], df[~enough_windows]
+
+
+# Compute ratio of duration to transcript len. Extreme values likely correspond
+# to problematic samples (too short for transcript, or too long for transcript).
+# Example of how to visualize the histogram of ratios:
+#
+# ratio = duration_to_transcript_len_ratio(df)
+# ratio.hist()
+#
+def duration_to_transcript_len_ratio(df, sample_rate=16000, utf8=False):
+    duration = (df['wav_filesize'] - 44) / 2 / sample_rate
+    if utf8:
+        tr_len = df['transcript'].str.encode('utf8').str.len()
+    else:
+        tr_len = df['transcript'].str.len()
+    return duration / tr_len
 
